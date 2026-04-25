@@ -220,13 +220,17 @@
                 const height = f['身高'] || '';
                 const education = f['学历'] || '';
                 const location = f['现居地'] || '';
-                // 正确的详情行拼接
+
+                // 详情行
                 const detailParts = [age ? age + '岁' : '', height ? height + 'cm' : '', location].filter(Boolean).join(' · ');
-                
-                // 图片路径逻辑：优先用 record_id 拼接本地图片
-                const rid = guest.record_id || '';
-                const avatarUrl = rid ? `images/${rid}.jpg` : '';
-                
+
+                // 用会员ID拼接图片路径，统一用 .jpg
+                const memberId = f['会员ID'] || '';
+                const avatarUrl = memberId ? `images/${memberId}.jpg` : '';
+
+                // 公众号资料链接：飞书字段是对象，取 link 属性
+                const profileUrl = (f['公众号资料链接'] && f['公众号资料链接'].link) ? f['公众号资料链接'].link : '';
+
                 return `
                     <div class="guest-card" style="animation-delay:${i*0.03}s">
                         <div class="card-avatar">
@@ -237,7 +241,7 @@
                             <div class="card-detail">${detailParts}</div>
                             <div class="card-tags">
                                 ${education ? `<span class="tag">${education}</span>` : ''}
-                                ${f['公众号资料链接'] ? `<a href="${f['公众号资料链接']}" target="_blank" class="tag" style="background:var(--accent-light);color:var(--accent);text-decoration:none;">📋 查看资料</a>` : ''}
+                                ${profileUrl ? `<a href="${profileUrl}" target="_blank" class="tag" style="background:var(--accent-light);color:var(--accent);text-decoration:none;">📋 查看资料</a>` : ''}
                             </div>
                         </div>
                     </div>
