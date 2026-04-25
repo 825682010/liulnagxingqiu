@@ -15,13 +15,13 @@
             --accent-light: #eef0ff;
             --accent-gradient: linear-gradient(135deg, #5b6af0 0%, #7c5cf0 30%, #4facfe 100%);
             --heart: #ff5e7a;
-            --heart-light: #fff0f3;
             --border: #e8eaf0;
-            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
-            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04);
-            --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
+            --shadow-lg: 0 12px 32px rgba(0,0,0,0.1);
             --radius-lg: 16px;
             --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -39,15 +39,30 @@
             display: flex; align-items: center; justify-content: space-between;
             border-bottom: 1px solid rgba(0,0,0,0.05);
         }
-        .logo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
-        .logo span { color: var(--accent); }
+        .logo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; display: flex; align-items: center; gap: 6px; }
+        .logo-icon {
+            width: 34px; height: 34px; border-radius: 10px;
+            background: var(--accent-gradient);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: 700; font-size: 18px;
+            box-shadow: 0 4px 14px rgba(91,106,240,0.3);
+        }
         .btn-filter {
+            position: relative;
             display: flex; align-items: center; gap: 4px;
             padding: 8px 14px; background: #fff; border: 1.5px solid var(--border);
             border-radius: 24px; font-size: 13px; font-weight: 500; cursor: pointer;
             transition: var(--transition);
         }
         .btn-filter:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+        .badge {
+            position: absolute; top: -4px; right: -4px;
+            width: 18px; height: 18px; border-radius: 50%;
+            background: var(--heart); color: #fff; font-size: 10px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; transform: scale(0.6); transition: var(--transition);
+        }
+        .badge.active { opacity: 1; transform: scale(1); }
         .stats-bar { text-align: center; padding: 10px; font-size: 12px; color: var(--text-muted); }
         .stats-bar strong { color: var(--accent); }
         .guest-list { padding: 4px 12px 80px; max-width: 800px; margin: 0 auto; }
@@ -56,7 +71,7 @@
         @media (min-width: 900px) { .cards-container { grid-template-columns: 1fr 1fr 1fr; } }
         .guest-card {
             background: var(--card-bg); border-radius: var(--radius-lg); overflow: hidden;
-            box-shadow: var(--shadow-sm); transition: var(--transition); cursor: pointer;
+            box-shadow: var(--shadow-sm); transition: var(--transition-slow); cursor: pointer;
             animation: fadeUp 0.5s ease both;
         }
         .guest-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
@@ -94,22 +109,97 @@
             display: flex; flex-direction: column;
         }
         .filter-modal.show { transform: translateX(0); }
-        .filter-header { padding: 16px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .filter-body { flex: 1; overflow-y: auto; padding: 16px; }
-        .filter-footer { padding: 14px; border-top: 1px solid #eee; display: flex; gap: 10px; }
-        .filter-footer button { flex: 1; padding: 12px; border-radius: 24px; border: none; font-weight: 600; }
-        .btn-reset { background: #f5f5f5; color: #666; }
-        .btn-confirm { background: var(--accent-gradient); color: #fff; }
-        .filter-group { margin-bottom: 24px; }
-        .filter-group label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px; }
+        .filter-modal-header { padding: 16px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .filter-modal-body { flex: 1; overflow-y: auto; }
+        .filter-tabs { display: flex; border-bottom: 1px solid #eee; }
+        .filter-tab {
+            flex: 1; padding: 12px; text-align: center; font-size: 13px; font-weight: 500;
+            color: #888; background: none; border: none; border-bottom: 2px solid transparent;
+            cursor: pointer; transition: 0.2s;
+        }
+        .filter-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+        .filter-group { padding: 16px; display: none; }
+        .filter-group.active { display: block; }
+        .filter-item { margin-bottom: 20px; }
+        .filter-item label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 10px; }
         .filter-options { display: flex; flex-wrap: wrap; gap: 8px; }
         .filter-chip {
             padding: 6px 14px; border-radius: 20px; background: #f5f6fa;
-            border: 1px solid #e8eaf0; font-size: 12px; cursor: pointer;
+            border: 1px solid #e8eaf0; font-size: 12px; cursor: pointer; transition: 0.2s;
         }
         .filter-chip.active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 600; }
-        .slider-row { display: flex; align-items: center; gap: 10px; }
-        .slider-row input { flex: 1; }
+
+        .range-container {
+            position: relative;
+            padding: 0 8px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+        }
+        .range-slider {
+            position: absolute;
+            left: 8px;
+            right: 8px;
+            height: 5px;
+            background: #e8eaf0;
+            border-radius: 3px;
+        }
+        .range-fill {
+            position: absolute;
+            height: 100%;
+            background: var(--accent-gradient);
+            border-radius: 3px;
+            left: 0%;
+            right: 0%;
+        }
+        input[type="range"] {
+            position: absolute;
+            left: 8px;
+            right: 8px;
+            width: calc(100% - 16px);
+            -webkit-appearance: none;
+            background: transparent;
+            pointer-events: none;
+            z-index: 2;
+            height: 5px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background: #fff;
+            border: 2px solid #5b6af0;
+            border-radius: 50%;
+            cursor: pointer;
+            pointer-events: auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: 0.2s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(91,106,240,0.3);
+        }
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .range-labels span {
+            background: #f5f6fa;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+        .range-labels span.unlimited {
+            background: var(--accent-light);
+            color: var(--accent);
+            font-weight: 700;
+        }
+        .filter-modal-footer { padding: 14px; border-top: 1px solid #eee; display: flex; gap: 10px; }
+        .btn-reset { flex: 1; padding: 12px; border-radius: 24px; background: #f5f5f5; color: #666; border: none; font-weight: 600; }
+        .btn-confirm { flex: 2; padding: 12px; border-radius: 24px; background: var(--accent-gradient); color: #fff; border: none; font-weight: 600; }
         .toast {
             position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
             background: #1a1a2e; color: #fff; padding: 10px 20px; border-radius: 20px;
@@ -120,8 +210,15 @@
 </head>
 <body>
     <header class="header">
-        <div class="logo">流浪星球<span>·</span></div>
-        <button class="btn-filter" id="openFilter">🔧 筛选</button>
+        <div class="logo">
+            <div class="logo-icon">🌍</div>
+            流浪星球
+        </div>
+        <button class="btn-filter" id="openFilter">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            筛选
+            <span class="badge" id="filterBadge">0</span>
+        </button>
     </header>
 
     <div class="stats-bar">共 <strong id="totalCount">0</strong> 位嘉宾</div>
@@ -134,45 +231,104 @@
 
     <div class="mask" id="mask"></div>
     <div class="filter-modal" id="filterModal">
-        <div class="filter-header">
+        <div class="filter-modal-header">
             <strong>筛选条件</strong>
             <span id="closeFilter" style="cursor:pointer; font-size:20px;">&times;</span>
         </div>
-        <div class="filter-body">
-            <div class="filter-group">
-                <label>性别</label>
-                <div class="filter-options" data-field="性别">
-                    <span class="filter-chip active" data-value="">全部</span>
-                    <span class="filter-chip" data-value="男">男</span>
-                    <span class="filter-chip" data-value="女">女</span>
+        <div class="filter-modal-body">
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-group="basic">基本信息</button>
+                <button class="filter-tab" data-group="economy">经济情况</button>
+            </div>
+            <div class="filter-group active" id="filter-basic">
+                <div class="filter-item">
+                    <label>性别</label>
+                    <div class="filter-options" data-field="性别">
+                        <span class="filter-chip active" data-value="">全部</span>
+                        <span class="filter-chip" data-value="男">男</span>
+                        <span class="filter-chip" data-value="女">女</span>
+                    </div>
+                </div>
+                <div class="filter-item">
+                    <label>年龄范围</label>
+                    <div class="range-container" id="ageSliderContainer">
+                        <div class="range-slider">
+                            <div class="range-fill" id="ageFill"></div>
+                        </div>
+                        <input type="range" id="ageMinSlider" min="18" max="40" value="18" step="1">
+                        <input type="range" id="ageMaxSlider" min="18" max="41" value="41" step="1">
+                    </div>
+                    <div class="range-labels">
+                        <span id="ageMinLabel">18岁</span>
+                        <span id="ageMaxLabel">不限</span>
+                    </div>
+                </div>
+                <div class="filter-item">
+                    <label>身高范围 (cm)</label>
+                    <div class="range-container" id="heightSliderContainer">
+                        <div class="range-slider">
+                            <div class="range-fill" id="heightFill"></div>
+                        </div>
+                        <input type="range" id="heightMinSlider" min="149" max="190" value="149" step="1">
+                        <input type="range" id="heightMaxSlider" min="150" max="191" value="191" step="1">
+                    </div>
+                    <div class="range-labels">
+                        <span id="heightMinLabel">不限</span>
+                        <span id="heightMaxLabel">不限</span>
+                    </div>
+                </div>
+                <div class="filter-item">
+                    <label>学历（可多选）</label>
+                    <div class="filter-options multi" data-field="学历">
+                        <span class="filter-chip" data-value="大专">大专</span>
+                        <span class="filter-chip" data-value="本科">本科</span>
+                        <span class="filter-chip" data-value="硕士">硕士</span>
+                        <span class="filter-chip" data-value="博士">博士</span>
+                    </div>
+                </div>
+                <div class="filter-item">
+                    <label>婚姻状态（可多选）</label>
+                    <div class="filter-options multi" data-field="婚姻状态">
+                        <span class="filter-chip" data-value="未婚">未婚</span>
+                        <span class="filter-chip" data-value="离异 · 不带娃">离异 · 不带娃</span>
+                        <span class="filter-chip" data-value="离异 · 带娃">离异 · 带娃</span>
+                        <span class="filter-chip" data-value="丧偶">丧偶</span>
+                    </div>
                 </div>
             </div>
-            <div class="filter-group">
-                <label>年龄范围</label>
-                <div class="slider-row">
-                    <input type="number" id="ageMin" placeholder="18" min="18" max="99"> -
-                    <input type="number" id="ageMax" placeholder="99" min="18" max="99">
+            <div class="filter-group" id="filter-economy">
+                <div class="filter-item">
+                    <label>年收入（可多选）</label>
+                    <div class="filter-options multi" data-field="年收入">
+                        <span class="filter-chip" data-value="10万以下">10万以下</span>
+                        <span class="filter-chip" data-value="10-20万">10-20万</span>
+                        <span class="filter-chip" data-value="20-30万">20-30万</span>
+                        <span class="filter-chip" data-value="30-50万">30-50万</span>
+                        <span class="filter-chip" data-value="50万以上">50万以上</span>
+                    </div>
                 </div>
-            </div>
-            <div class="filter-group">
-                <label>学历（多选）</label>
-                <div class="filter-options" data-field="学历" multiple>
-                    <span class="filter-chip" data-value="大专">大专</span>
-                    <span class="filter-chip" data-value="本科">本科</span>
-                    <span class="filter-chip" data-value="硕士">硕士</span>
-                    <span class="filter-chip" data-value="博士">博士</span>
+                <div class="filter-item">
+                    <label>房产情况（可多选）</label>
+                    <div class="filter-options multi" data-field="房产情况">
+                        <span class="filter-chip" data-value="有房 · 无贷">有房 · 无贷</span>
+                        <span class="filter-chip" data-value="有房 · 有贷">有房 · 有贷</span>
+                        <span class="filter-chip" data-value="无房 · 计划购房">无房 · 计划购房</span>
+                        <span class="filter-chip" data-value="无房 · 暂不考虑购房">无房 · 暂不考虑购房</span>
+                        <span class="filter-chip" data-value="无房 · 期望双方共同购买">无房 · 期望双方共同购买</span>
+                        <span class="filter-chip" data-value="与父母同住">与父母同住</span>
+                    </div>
                 </div>
-            </div>
-            <div class="filter-group">
-                <label>婚姻状态（多选）</label>
-                <div class="filter-options" data-field="婚姻状态" multiple>
-                    <span class="filter-chip" data-value="未婚">未婚</span>
-                    <span class="filter-chip" data-value="离异">离异</span>
-                    <span class="filter-chip" data-value="丧偶">丧偶</span>
+                <div class="filter-item">
+                    <label>车产情况（可多选）</label>
+                    <div class="filter-options multi" data-field="车产情况">
+                        <span class="filter-chip" data-value="有车">有车</span>
+                        <span class="filter-chip" data-value="无车 · 计划购车">无车 · 计划购车</span>
+                        <span class="filter-chip" data-value="无车 · 暂不考虑购车">无车 · 暂不考虑购车</span>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="filter-footer">
+        <div class="filter-modal-footer">
             <button class="btn-reset" id="resetFilter">重置</button>
             <button class="btn-confirm" id="confirmFilter">确定</button>
         </div>
@@ -199,11 +355,6 @@
             setTimeout(() => toast.classList.remove('show'), 1800);
         }
 
-        function showLoading(show) {
-            loadingState.style.display = show ? 'flex' : 'none';
-            if (show) cardsContainer.innerHTML = '';
-        }
-
         function renderCards(data) {
             if (data.length === 0) {
                 cardsContainer.innerHTML = '';
@@ -220,13 +371,11 @@
                 const height = f['身高'] || '';
                 const education = f['学历'] || '';
                 const location = f['现居地'] || '';
-                const detailParts = [age ? age + '岁' : '', height ? height + 'cm' : '', location].filter(Boolean).join(' · ');
+                const detailParts = [age ? age+'岁' : '', height ? height+'cm' : '', location].filter(Boolean).join(' · ');
 
-                // 图片路径：用会员ID拼接本地文件
                 const memberId = f['会员ID'] || '';
                 const avatarUrl = memberId ? `images/${memberId}.jpg` : '';
 
-                // 公众号资料链接：飞书存的是对象，取它的 link 属性
                 const linkField = f['公众号资料链接'];
                 const profileUrl = (linkField && typeof linkField === 'object' && linkField.link) ? linkField.link : '';
 
@@ -248,38 +397,177 @@
             }).join('');
         }
 
-        // 卡片点击跳转功能
-        cardsContainer.addEventListener('click', (e) => {
-            const card = e.target.closest('.guest-card');
-            if (!card) return;
-            const index = Array.from(cardsContainer.children).indexOf(card);
-            const guest = filteredGuests[index];
-            const linkField = guest && guest.fields['公众号资料链接'];
-            const profileUrl = (linkField && typeof linkField === 'object' && linkField.link) ? linkField.link : '';
-            if (profileUrl) {
-                window.open(profileUrl, '_blank');
-            }
-        });
-
-
         function applyFilters() {
             let result = [...allGuests];
             const gender = currentFilters['性别'];
             if (gender) result = result.filter(g => g.fields['性别'] === gender);
-            const ageMin = parseInt(currentFilters['年龄']?.min) || 0;
-            const ageMax = parseInt(currentFilters['年龄']?.max) || 200;
+
+            const ageMin = currentFilters['年龄']?.min ?? 18;
+            const ageMax = currentFilters['年龄']?.max ?? 999;
             result = result.filter(g => {
                 const a = parseInt(g.fields['年龄']) || 0;
                 return a >= ageMin && a <= ageMax;
             });
-            ['学历', '婚姻状态'].forEach(field => {
+
+            const heightMin = currentFilters['身高']?.min ?? 0;
+            const heightMax = currentFilters['身高']?.max ?? 999;
+            result = result.filter(g => {
+                const h = parseInt(g.fields['身高']) || 0;
+                return h >= heightMin && h <= heightMax;
+            });
+
+            ['学历', '婚姻状态', '年收入', '房产情况', '车产情况'].forEach(field => {
                 const vals = currentFilters[field];
                 if (vals && vals.length > 0) {
                     result = result.filter(g => vals.some(v => (g.fields[field] || '').includes(v)));
                 }
             });
+
             filteredGuests = result;
             renderCards(filteredGuests);
+        }
+
+        // ---- 滑块更新（支持“不限”） ----
+        function updateRange(sliderMin, sliderMax, fill, labelMin, labelMax, unit, unlimitedMin, unlimitedMax) {
+            let minVal = parseInt(sliderMin.value);
+            let maxVal = parseInt(sliderMax.value);
+            if (minVal > maxVal) {
+                [minVal, maxVal] = [maxVal, minVal];
+                sliderMin.value = minVal;
+                sliderMax.value = maxVal;
+            }
+            const total = parseInt(sliderMin.max) - parseInt(sliderMin.min);
+            const left = ((minVal - parseInt(sliderMin.min)) / total) * 100;
+            const right = ((parseInt(sliderMax.max) - maxVal) / total) * 100;
+            fill.style.left = left + '%';
+            fill.style.right = right + '%';
+
+            if (labelMin) {
+                labelMin.textContent = (unlimitedMin && minVal === parseInt(sliderMin.min)) ? '不限' : minVal + unit;
+                labelMin.classList.toggle('unlimited', unlimitedMin && minVal === parseInt(sliderMin.min));
+            }
+            if (labelMax) {
+                labelMax.textContent = (unlimitedMax && maxVal === parseInt(sliderMax.max)) ? '不限' : maxVal + unit;
+                labelMax.classList.toggle('unlimited', unlimitedMax && maxVal === parseInt(sliderMax.max));
+            }
+            return { min: minVal, max: maxVal };
+        }
+
+        // 年龄滑块：最小值18，最大值40为实际最大，41代表“不限”
+        const ageMinSlider = document.getElementById('ageMinSlider');
+        const ageMaxSlider = document.getElementById('ageMaxSlider');
+        const ageFill = document.getElementById('ageFill');
+        const ageMinLabel = document.getElementById('ageMinLabel');
+        const ageMaxLabel = document.getElementById('ageMaxLabel');
+
+        ageMinSlider.addEventListener('input', () => updateRange(ageMinSlider, ageMaxSlider, ageFill, ageMinLabel, ageMaxLabel, '岁', false, true));
+        ageMaxSlider.addEventListener('input', () => updateRange(ageMinSlider, ageMaxSlider, ageFill, ageMinLabel, ageMaxLabel, '岁', false, true));
+        updateRange(ageMinSlider, ageMaxSlider, ageFill, ageMinLabel, ageMaxLabel, '岁', false, true);
+
+        // 身高滑块：最小值149代表“不限”，150为最小实际值；最大值190为实际最大，191代表“不限”
+        const heightMinSlider = document.getElementById('heightMinSlider');
+        const heightMaxSlider = document.getElementById('heightMaxSlider');
+        const heightFill = document.getElementById('heightFill');
+        const heightMinLabel = document.getElementById('heightMinLabel');
+        const heightMaxLabel = document.getElementById('heightMaxLabel');
+
+        heightMinSlider.addEventListener('input', () => updateRange(heightMinSlider, heightMaxSlider, heightFill, heightMinLabel, heightMaxLabel, 'cm', true, true));
+        heightMaxSlider.addEventListener('input', () => updateRange(heightMinSlider, heightMaxSlider, heightFill, heightMinLabel, heightMaxLabel, 'cm', true, true));
+        updateRange(heightMinSlider, heightMaxSlider, heightFill, heightMinLabel, heightMaxLabel, 'cm', true, true);
+
+        // ---- 筛选面板选项卡 ----
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const group = tab.dataset.group;
+                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                document.querySelectorAll('.filter-group').forEach(g => g.classList.remove('active'));
+                document.getElementById('filter-' + group).classList.add('active');
+            });
+        });
+
+        // ---- 芯片点击 ----
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', function() {
+                const parent = this.parentElement;
+                if (parent.classList.contains('multi')) {
+                    this.classList.toggle('active');
+                } else {
+                    parent.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                }
+            });
+        });
+
+        // ---- 收集筛选条件 ----
+        document.getElementById('confirmFilter').addEventListener('click', () => {
+            currentFilters = {};
+            document.querySelectorAll('.filter-group').forEach(group => {
+                group.querySelectorAll('.filter-options').forEach(options => {
+                    const field = options.dataset.field;
+                    const activeChips = options.querySelectorAll('.filter-chip.active');
+                    if (activeChips.length === 0) return;
+                    if (options.classList.contains('multi')) {
+                        const vals = Array.from(activeChips).map(c => c.dataset.value).filter(Boolean);
+                        if (vals.length > 0) currentFilters[field] = vals;
+                    } else {
+                        const val = activeChips[0].dataset.value;
+                        if (val) currentFilters[field] = val;
+                    }
+                });
+            });
+
+            // 年龄：如果 max 滑块值为 41，视为“不限”，设为 999
+            let ageMin = parseInt(ageMinSlider.value);
+            let ageMax = parseInt(ageMaxSlider.value);
+            if (ageMax > 40) ageMax = 999;
+            currentFilters['年龄'] = { min: ageMin, max: ageMax };
+
+            // 身高：如果 min 滑块值为 149，视为“不限”，设为 0；max 为 191 则设为 999
+            let hMin = parseInt(heightMinSlider.value);
+            let hMax = parseInt(heightMaxSlider.value);
+            if (hMin < 150) hMin = 0;
+            if (hMax > 190) hMax = 999;
+            currentFilters['身高'] = { min: hMin, max: hMax };
+
+            applyFilters();
+            filterModal.classList.remove('show');
+            mask.classList.remove('show');
+            updateBadge();
+            showToast('✅ 筛选已应用');
+        });
+
+        document.getElementById('resetFilter').addEventListener('click', () => {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            document.querySelector('[data-field="性别"] .filter-chip[data-value=""]').classList.add('active');
+            ageMinSlider.value = 18;
+            ageMaxSlider.value = 41;
+            updateRange(ageMinSlider, ageMaxSlider, ageFill, ageMinLabel, ageMaxLabel, '岁', false, true);
+            heightMinSlider.value = 149;
+            heightMaxSlider.value = 191;
+            updateRange(heightMinSlider, heightMaxSlider, heightFill, heightMinLabel, heightMaxLabel, 'cm', true, true);
+            currentFilters = {};
+            applyFilters();
+            filterModal.classList.remove('show');
+            mask.classList.remove('show');
+            updateBadge();
+            showToast('🔄 筛选已重置');
+        });
+
+        function updateBadge() {
+            let count = 0;
+            if (currentFilters['性别']) count++;
+            if (currentFilters['年龄']) count++;
+            if (currentFilters['身高']) count++;
+            if (currentFilters['学历']) count++;
+            if (currentFilters['婚姻状态']) count++;
+            if (currentFilters['年收入']) count++;
+            if (currentFilters['房产情况']) count++;
+            if (currentFilters['车产情况']) count++;
+            const badge = document.getElementById('filterBadge');
+            badge.textContent = count;
+            if (count > 0) badge.classList.add('active');
+            else badge.classList.remove('active');
         }
 
         document.getElementById('openFilter').addEventListener('click', () => {
@@ -295,67 +583,31 @@
             mask.classList.remove('show');
         });
 
-        document.querySelectorAll('.filter-chip').forEach(chip => {
-            chip.addEventListener('click', function() {
-                const parent = this.parentElement;
-                if (parent.hasAttribute('multiple')) {
-                    this.classList.toggle('active');
-                } else {
-                    parent.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-                    this.classList.add('active');
-                }
-            });
+        // ---- 卡片点击跳转 ----
+        cardsContainer.addEventListener('click', (e) => {
+            const card = e.target.closest('.guest-card');
+            if (!card) return;
+            const index = Array.from(cardsContainer.children).indexOf(card);
+            const guest = filteredGuests[index];
+            const linkField = guest && guest.fields['公众号资料链接'];
+            const profileUrl = (linkField && typeof linkField === 'object' && linkField.link) ? linkField.link : '';
+            if (profileUrl) window.open(profileUrl, '_blank');
         });
 
-        document.getElementById('confirmFilter').addEventListener('click', () => {
-            currentFilters = {};
-            document.querySelectorAll('.filter-options').forEach(group => {
-                const field = group.dataset.field;
-                const activeChips = group.querySelectorAll('.filter-chip.active');
-                if (activeChips.length === 0) return;
-                if (group.hasAttribute('multiple')) {
-                    const vals = Array.from(activeChips).map(c => c.dataset.value).filter(Boolean);
-                    if (vals.length > 0) currentFilters[field] = vals;
-                } else {
-                    const val = activeChips[0].dataset.value;
-                    if (val) currentFilters[field] = val;
-                }
-            });
-            const ageMin = document.getElementById('ageMin').value;
-            const ageMax = document.getElementById('ageMax').value;
-            if (ageMin || ageMax) currentFilters['年龄'] = { min: ageMin || 18, max: ageMax || 99 };
-            applyFilters();
-            filterModal.classList.remove('show');
-            mask.classList.remove('show');
-            showToast('✅ 筛选已应用');
-        });
-
-        document.getElementById('resetFilter').addEventListener('click', () => {
-            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-            document.querySelector('[data-field="性别"] .filter-chip[data-value=""]').classList.add('active');
-            document.getElementById('ageMin').value = '';
-            document.getElementById('ageMax').value = '';
-            currentFilters = {};
-            applyFilters();
-            filterModal.classList.remove('show');
-            mask.classList.remove('show');
-        });
-
+        // ---- 初始化 ----
         async function init() {
-            showLoading(true);
+            loadingState.style.display = 'flex';
             try {
                 const resp = await fetch('data.json');
                 if (!resp.ok) throw new Error('数据加载失败');
                 allGuests = await resp.json();
-                console.log('✅ 加载 ' + allGuests.length + ' 条真实数据');
                 filteredGuests = [...allGuests];
                 renderCards(filteredGuests);
             } catch (e) {
-                console.error(e);
                 renderCards([]);
                 showToast('❌ 数据加载失败');
             } finally {
-                showLoading(false);
+                loadingState.style.display = 'none';
             }
         }
 
