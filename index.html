@@ -220,10 +220,13 @@
                 const height = f['身高'] || '';
                 const education = f['学历'] || '';
                 const location = f['现居地'] || '';
-                const imgs = f['首图'] || [];
-                const avatarUrl = f['会员ID'] ? `images/${f['会员ID']}.png` : (Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : '');
                 // 正确的详情行拼接
                 const detailParts = [age ? age + '岁' : '', height ? height + 'cm' : '', location].filter(Boolean).join(' · ');
+                
+                // 图片路径逻辑：优先用 record_id 拼接本地图片
+                const rid = guest.record_id || '';
+                const avatarUrl = rid ? `images/${rid}.png` : '';
+                
                 return `
                     <div class="guest-card" style="animation-delay:${i*0.03}s">
                         <div class="card-avatar">
