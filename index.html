@@ -225,7 +225,7 @@
                 
                 // 图片路径逻辑：优先用 record_id 拼接本地图片
                 const rid = guest.record_id || '';
-                const avatarUrl = rid ? `images/${rid}.png` : '';
+                const avatarUrl = rid ? `images/${rid}.jpg` : '';
                 
                 return `
                     <div class="guest-card" style="animation-delay:${i*0.03}s">
