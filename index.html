@@ -23,9 +23,7 @@
             --radius-lg: 16px;
             --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
             background: var(--bg);
@@ -34,7 +32,6 @@
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
         }
-
         .header {
             position: sticky; top: 0; z-index: 100;
             background: rgba(255,255,255,0.85); backdrop-filter: blur(20px);
@@ -44,7 +41,6 @@
         }
         .logo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
         .logo span { color: var(--accent); }
-
         .btn-filter {
             display: flex; align-items: center; gap: 4px;
             padding: 8px 14px; background: #fff; border: 1.5px solid var(--border);
@@ -52,15 +48,12 @@
             transition: var(--transition);
         }
         .btn-filter:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
-
         .stats-bar { text-align: center; padding: 10px; font-size: 12px; color: var(--text-muted); }
         .stats-bar strong { color: var(--accent); }
-
         .guest-list { padding: 4px 12px 80px; max-width: 800px; margin: 0 auto; }
         .cards-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         @media (min-width: 640px) { .cards-container { gap: 16px; } }
         @media (min-width: 900px) { .cards-container { grid-template-columns: 1fr 1fr 1fr; } }
-
         .guest-card {
             background: var(--card-bg); border-radius: var(--radius-lg); overflow: hidden;
             box-shadow: var(--shadow-sm); transition: var(--transition); cursor: pointer;
@@ -68,14 +61,12 @@
         }
         .guest-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
-
         .card-avatar {
             width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
             background: var(--accent-gradient); color: #fff; font-size: 48px; font-weight: 700;
             position: relative; overflow: hidden;
         }
         .card-avatar img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
-
         .card-info { padding: 12px; }
         .card-name { font-size: 15px; font-weight: 700; }
         .card-detail { font-size: 11px; color: var(--text-muted); margin: 4px 0; }
@@ -84,7 +75,6 @@
             font-size: 10px; padding: 2px 8px; border-radius: 10px;
             background: #f0f0f5; color: #6b6f80;
         }
-
         .empty-state { text-align: center; padding: 60px; color: var(--text-muted); display: none; }
         .loading-state { display: flex; flex-direction: column; align-items: center; padding: 60px; }
         .spinner {
@@ -92,14 +82,11 @@
             border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* 筛选面板 */
         .mask {
             position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200;
             opacity: 0; visibility: hidden; transition: 0.3s;
         }
         .mask.show { opacity: 1; visibility: visible; }
-
         .filter-modal {
             position: fixed; top: 0; right: 0; bottom: 0; width: 88%; max-width: 380px;
             background: #fff; z-index: 210; box-shadow: -8px 0 40px rgba(0,0,0,0.15);
@@ -113,7 +100,6 @@
         .filter-footer button { flex: 1; padding: 12px; border-radius: 24px; border: none; font-weight: 600; }
         .btn-reset { background: #f5f5f5; color: #666; }
         .btn-confirm { background: var(--accent-gradient); color: #fff; }
-
         .filter-group { margin-bottom: 24px; }
         .filter-group label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px; }
         .filter-options { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -122,10 +108,8 @@
             border: 1px solid #e8eaf0; font-size: 12px; cursor: pointer;
         }
         .filter-chip.active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 600; }
-
         .slider-row { display: flex; align-items: center; gap: 10px; }
         .slider-row input { flex: 1; }
-
         .toast {
             position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
             background: #1a1a2e; color: #fff; padding: 10px 20px; border-radius: 20px;
@@ -197,12 +181,10 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        // ---------- 全局变量 ----------
         let allGuests = [];
         let filteredGuests = [];
         let currentFilters = {};
 
-        // ---------- DOM ----------
         const cardsContainer = document.getElementById('cardsContainer');
         const loadingState = document.getElementById('loadingState');
         const emptyState = document.getElementById('emptyState');
@@ -211,7 +193,6 @@
         const mask = document.getElementById('mask');
         const toast = document.getElementById('toast');
 
-        // ---------- 工具函数 ----------
         function showToast(msg) {
             toast.textContent = msg;
             toast.classList.add('show');
@@ -220,10 +201,9 @@
 
         function showLoading(show) {
             loadingState.style.display = show ? 'flex' : 'none';
-            cardsContainer.innerHTML = '';
+            if (show) cardsContainer.innerHTML = '';
         }
 
-        // ---------- 渲染卡片 ----------
         function renderCards(data) {
             if (data.length === 0) {
                 cardsContainer.innerHTML = '';
@@ -243,8 +223,7 @@
                 const location = f['现居地'] || '';
                 const imgs = f['首图'] || [];
                 const avatarUrl = Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : '';
-                const detailParts = [age + '岁', height + 'cm'].filter(Boolean).join(' · ');
-
+                const detailParts = [age ? age + '岁' : '', height ? height + 'cm' : ''].filter(Boolean).join(' · ');
                 return `
                     <div class="guest-card" style="animation-delay:${i*0.03}s">
                         <div class="card-avatar">
@@ -263,7 +242,6 @@
             }).join('');
         }
 
-        // ---------- 筛选逻辑 ----------
         function applyFilters() {
             let result = [...allGuests];
             const gender = currentFilters['性别'];
@@ -271,7 +249,7 @@
             const ageMin = parseInt(currentFilters['年龄']?.min) || 0;
             const ageMax = parseInt(currentFilters['年龄']?.max) || 200;
             result = result.filter(g => {
-                const a = parseInt(g.fields['年龄']);
+                const a = parseInt(g.fields['年龄']) || 0;
                 return a >= ageMin && a <= ageMax;
             });
             ['学历', '婚姻状态'].forEach(field => {
@@ -284,7 +262,6 @@
             renderCards(filteredGuests);
         }
 
-        // ---------- 筛选面板交互 ----------
         document.getElementById('openFilter').addEventListener('click', () => {
             filterModal.classList.add('show');
             mask.classList.add('show');
@@ -344,7 +321,6 @@
             mask.classList.remove('show');
         });
 
-        // ---------- 初始化：从 data.json 加载 ----------
         async function init() {
             showLoading(true);
             try {
