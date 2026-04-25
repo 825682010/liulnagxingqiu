@@ -216,14 +216,14 @@
             cardsContainer.innerHTML = data.map((guest, i) => {
                 const f = guest.fields || {};
                 const name = f['昵称'] || '匿名';
-                const gender = f['性别'] || '';
                 const age = f['年龄'] || '';
                 const height = f['身高'] || '';
                 const education = f['学历'] || '';
                 const location = f['现居地'] || '';
                 const imgs = f['首图'] || [];
                 const avatarUrl = Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : '';
-                const detailParts = [age ? age + '岁' : '', height ? height + 'cm' : ''].filter(Boolean).join(' · ');
+                // 正确的详情行拼接
+                const detailParts = [age ? age + '岁' : '', height ? height + 'cm' : '', location].filter(Boolean).join(' · ');
                 return `
                     <div class="guest-card" style="animation-delay:${i*0.03}s">
                         <div class="card-avatar">
@@ -234,13 +234,25 @@
                             <div class="card-detail">${detailParts}</div>
                             <div class="card-tags">
                                 ${education ? `<span class="tag">${education}</span>` : ''}
-                                ${location ? `<span class="tag">${location}</span>` : ''}
+                                ${f['公众号资料链接'] ? `<a href="${f['公众号资料链接']}" target="_blank" class="tag" style="background:var(--accent-light);color:var(--accent);text-decoration:none;">📋 查看资料</a>` : ''}
                             </div>
                         </div>
                     </div>
                 `;
             }).join('');
         }
+
+        // 卡片点击跳转功能
+        cardsContainer.addEventListener('click', (e) => {
+            const card = e.target.closest('.guest-card');
+            if (!card) return;
+            const index = Array.from(cardsContainer.children).indexOf(card);
+            const guest = filteredGuests[index];
+            if (guest && guest.fields['公众号资料链接']) {
+                window.open(guest.fields['公众号资料链接'], '_blank');
+            }
+        });
+
 
         function applyFilters() {
             let result = [...allGuests];
