@@ -3,184 +3,367 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#ffffff">
     <title>流浪星球 - 发现TA</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/rangeslider.css">
+    <style>
+        :root {
+            --bg: #f5f6fa;
+            --card-bg: #ffffff;
+            --text-primary: #1a1a2e;
+            --text-secondary: #5a5d6e;
+            --text-muted: #9a9db0;
+            --accent: #5b6af0;
+            --accent-light: #eef0ff;
+            --accent-gradient: linear-gradient(135deg, #5b6af0 0%, #7c5cf0 30%, #4facfe 100%);
+            --heart: #ff5e7a;
+            --heart-light: #fff0f3;
+            --border: #e8eaf0;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
+            --radius-lg: 16px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .header {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(255,255,255,0.85); backdrop-filter: blur(20px);
+            padding: 12px 16px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .logo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+        .logo span { color: var(--accent); }
+
+        .btn-filter {
+            display: flex; align-items: center; gap: 4px;
+            padding: 8px 14px; background: #fff; border: 1.5px solid var(--border);
+            border-radius: 24px; font-size: 13px; font-weight: 500; cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-filter:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+
+        .stats-bar { text-align: center; padding: 10px; font-size: 12px; color: var(--text-muted); }
+        .stats-bar strong { color: var(--accent); }
+
+        .guest-list { padding: 4px 12px 80px; max-width: 800px; margin: 0 auto; }
+        .cards-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (min-width: 640px) { .cards-container { gap: 16px; } }
+        @media (min-width: 900px) { .cards-container { grid-template-columns: 1fr 1fr 1fr; } }
+
+        .guest-card {
+            background: var(--card-bg); border-radius: var(--radius-lg); overflow: hidden;
+            box-shadow: var(--shadow-sm); transition: var(--transition); cursor: pointer;
+            animation: fadeUp 0.5s ease both;
+        }
+        .guest-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card-avatar {
+            width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+            background: var(--accent-gradient); color: #fff; font-size: 48px; font-weight: 700;
+            position: relative; overflow: hidden;
+        }
+        .card-avatar img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
+
+        .card-info { padding: 12px; }
+        .card-name { font-size: 15px; font-weight: 700; }
+        .card-detail { font-size: 11px; color: var(--text-muted); margin: 4px 0; }
+        .card-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+        .tag {
+            font-size: 10px; padding: 2px 8px; border-radius: 10px;
+            background: #f0f0f5; color: #6b6f80;
+        }
+
+        .empty-state { text-align: center; padding: 60px; color: var(--text-muted); display: none; }
+        .loading-state { display: flex; flex-direction: column; align-items: center; padding: 60px; }
+        .spinner {
+            width: 36px; height: 36px; border: 3px solid #eee;
+            border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* 筛选面板 */
+        .mask {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200;
+            opacity: 0; visibility: hidden; transition: 0.3s;
+        }
+        .mask.show { opacity: 1; visibility: visible; }
+
+        .filter-modal {
+            position: fixed; top: 0; right: 0; bottom: 0; width: 88%; max-width: 380px;
+            background: #fff; z-index: 210; box-shadow: -8px 0 40px rgba(0,0,0,0.15);
+            transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.32,0.72,0,1);
+            display: flex; flex-direction: column;
+        }
+        .filter-modal.show { transform: translateX(0); }
+        .filter-header { padding: 16px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .filter-body { flex: 1; overflow-y: auto; padding: 16px; }
+        .filter-footer { padding: 14px; border-top: 1px solid #eee; display: flex; gap: 10px; }
+        .filter-footer button { flex: 1; padding: 12px; border-radius: 24px; border: none; font-weight: 600; }
+        .btn-reset { background: #f5f5f5; color: #666; }
+        .btn-confirm { background: var(--accent-gradient); color: #fff; }
+
+        .filter-group { margin-bottom: 24px; }
+        .filter-group label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px; }
+        .filter-options { display: flex; flex-wrap: wrap; gap: 8px; }
+        .filter-chip {
+            padding: 6px 14px; border-radius: 20px; background: #f5f6fa;
+            border: 1px solid #e8eaf0; font-size: 12px; cursor: pointer;
+        }
+        .filter-chip.active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+        .slider-row { display: flex; align-items: center; gap: 10px; }
+        .slider-row input { flex: 1; }
+
+        .toast {
+            position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+            background: #1a1a2e; color: #fff; padding: 10px 20px; border-radius: 20px;
+            font-size: 13px; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 300;
+        }
+        .toast.show { opacity: 1; }
+    </style>
 </head>
 <body>
-    <!-- 顶部导航 -->
     <header class="header">
-        <div class="header-center">
-            <h1 class="logo">🪐 流浪星球</h1>
-        </div>
-        <button class="filter-btn" id="openFilter">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="4" y1="6" x2="20" y2="6"/>
-                <line x1="4" y1="12" x2="20" y2="12"/>
-                <line x1="4" y1="18" x2="20" y2="18"/>
-                <circle cx="8" cy="6" r="2" fill="currentColor"/>
-                <circle cx="16" cy="12" r="2" fill="currentColor"/>
-                <circle cx="12" cy="18" r="2" fill="currentColor"/>
-            </svg>
-            筛选
-        </button>
+        <div class="logo">流浪星球<span>·</span></div>
+        <button class="btn-filter" id="openFilter">🔧 筛选</button>
     </header>
 
-    <!-- 统计栏 -->
-    <div class="stats-bar">
-        <span id="totalCount">共 0 位嘉宾</span>
+    <div class="stats-bar">共 <strong id="totalCount">0</strong> 位嘉宾</div>
+
+    <div class="guest-list">
+        <div class="loading-state" id="loadingState"><div class="spinner"></div><p>加载中...</p></div>
+        <div class="cards-container" id="cardsContainer"></div>
+        <div class="empty-state" id="emptyState">🔍 没有找到匹配的嘉宾</div>
     </div>
 
-    <!-- 嘉宾列表 -->
-    <main class="guest-list" id="guestList">
-        <div class="cards-container" id="cardsContainer"></div>
-        
-        <!-- 加载状态 -->
-        <div class="loading-state" id="loadingState">
-            <div class="spinner"></div>
-            <p>加载中...</p>
-        </div>
-
-        <!-- 空状态 -->
-        <div class="empty-state" id="emptyState" style="display: none;">
-            <div class="empty-icon">💔</div>
-            <p>要求太严格<br>可不太好脱单哦</p>
-        </div>
-    </main>
-
-    <!-- 筛选弹窗 -->
+    <div class="mask" id="mask"></div>
     <div class="filter-modal" id="filterModal">
-        <div class="filter-modal-header">
-            <span class="filter-modal-title">筛选条件</span>
-            <button class="filter-modal-close" id="closeFilter">×</button>
+        <div class="filter-header">
+            <strong>筛选条件</strong>
+            <span id="closeFilter" style="cursor:pointer; font-size:20px;">&times;</span>
         </div>
-        
-        <!-- 分组Tab -->
-        <div class="filter-tabs">
-            <button class="filter-tab active" data-group="basic">基本信息</button>
-            <button class="filter-tab" data-group="finance">经济情况</button>
-        </div>
-        
-        <div class="filter-modal-body">
-            <!-- 基本信息 -->
-            <div class="filter-group" id="group-basic">
-                <!-- 性别 -->
-                <div class="filter-item">
-                    <label>性别</label>
-                    <div class="filter-options">
-                        <button class="filter-chip active" data-field="性别" data-value="">全部</button>
-                        <button class="filter-chip" data-field="性别" data-value="男">男生</button>
-                        <button class="filter-chip" data-field="性别" data-value="女">女生</button>
-                    </div>
-                </div>
-
-                <!-- 年龄 - 滑块 -->
-                <div class="filter-item">
-                    <label>年龄范围</label>
-                    <div class="slider-container">
-                        <div class="slider-track">
-                            <div class="slider-fill" id="ageFill"></div>
-                        </div>
-                        <input type="range" class="range-slider" id="ageMin" min="18" max="50" value="18" data-field="年龄">
-                        <input type="range" class="range-slider" id="ageMax" min="18" max="50" value="50" data-field="年龄">
-                        <div class="slider-values">
-                            <span id="ageMinValue">18岁</span>
-                            <span id="ageMaxValue">50岁</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 身高 - 滑块 -->
-                <div class="filter-item">
-                    <label>身高范围</label>
-                    <div class="slider-container">
-                        <div class="slider-track">
-                            <div class="slider-fill" id="heightFill"></div>
-                        </div>
-                        <input type="range" class="range-slider" id="heightMin" min="150" max="190" value="150" data-field="身高">
-                        <input type="range" class="range-slider" id="heightMax" min="150" max="190" value="190" data-field="身高">
-                        <div class="slider-values">
-                            <span id="heightMinValue">不限</span>
-                            <span id="heightMaxValue">不限</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 学历 -->
-                <div class="filter-item">
-                    <label>学历（可多选）</label>
-                    <div class="filter-options multi-select">
-                        <button class="filter-chip" data-field="学历" data-value="大专">大专</button>
-                        <button class="filter-chip" data-field="学历" data-value="本科">本科</button>
-                        <button class="filter-chip" data-field="学历" data-value="硕士">硕士</button>
-                        <button class="filter-chip" data-field="学历" data-value="博士">博士</button>
-                    </div>
-                </div>
-
-                <!-- 婚姻状态 -->
-                <div class="filter-item">
-                    <label>婚姻状态（可多选）</label>
-                    <div class="filter-options multi-select">
-                        <button class="filter-chip" data-field="婚姻状态" data-value="未婚">未婚</button>
-                        <button class="filter-chip" data-field="婚姻状态" data-value="离异 · 不带娃">离异 · 不带娃</button>
-                        <button class="filter-chip" data-field="婚姻状态" data-value="离异 · 带娃">离异 · 带娃</button>
-                        <button class="filter-chip" data-field="婚姻状态" data-value="丧偶">丧偶</button>
-                    </div>
+        <div class="filter-body">
+            <div class="filter-group">
+                <label>性别</label>
+                <div class="filter-options" data-field="性别">
+                    <span class="filter-chip active" data-value="">全部</span>
+                    <span class="filter-chip" data-value="男">男</span>
+                    <span class="filter-chip" data-value="女">女</span>
                 </div>
             </div>
-
-            <!-- 经济情况 -->
-            <div class="filter-group" id="group-finance" style="display:none;">
-                <!-- 年收入 -->
-                <div class="filter-item">
-                    <label>年收入（可多选）</label>
-                    <div class="filter-options multi-select">
-                        <button class="filter-chip" data-field="年收入" data-value="10万以下">10万以下</button>
-                        <button class="filter-chip" data-field="年收入" data-value="10-20万">10-20万</button>
-                        <button class="filter-chip" data-field="年收入" data-value="20-30万">20-30万</button>
-                        <button class="filter-chip" data-field="年收入" data-value="30-50万">30-50万</button>
-                        <button class="filter-chip" data-field="年收入" data-value="50万以上">50万以上</button>
-                    </div>
-                </div>
-
-                <!-- 房产情况 - 精确匹配截图 -->
-                <div class="filter-item">
-                    <label>房产情况（可多选）</label>
-                    <div class="filter-options multi-select">
-                        <button class="filter-chip" data-field="房产情况" data-value="有房 · 无贷">有房 · 无贷</button>
-                        <button class="filter-chip" data-field="房产情况" data-value="有房 · 有贷">有房 · 有贷</button>
-                        <button class="filter-chip" data-field="房产情况" data-value="无房 · 计划购房">无房 · 计划购房</button>
-                        <button class="filter-chip" data-field="房产情况" data-value="无房 · 暂不考虑购房">无房 · 暂不考虑购房</button>
-                        <button class="filter-chip" data-field="房产情况" data-value="无房，期望双方共同购买">无房，期望双方共同购买</button>
-                        <button class="filter-chip" data-field="房产情况" data-value="与父母同住">与父母同住</button>
-                    </div>
-                </div>
-
-                <!-- 车产情况 - 精确匹配截图 -->
-                <div class="filter-item">
-                    <label>车产情况（可多选）</label>
-                    <div class="filter-options multi-select">
-                        <button class="filter-chip" data-field="车产情况" data-value="有车">有车</button>
-                        <button class="filter-chip" data-field="车产情况" data-value="无车 · 计划购车">无车 · 计划购车</button>
-                        <button class="filter-chip" data-field="车产情况" data-value="无车 · 暂不考虑购车">无车 · 暂不考虑购车</button>
-                    </div>
+            <div class="filter-group">
+                <label>年龄范围</label>
+                <div class="slider-row">
+                    <input type="number" id="ageMin" placeholder="18" min="18" max="99"> -
+                    <input type="number" id="ageMax" placeholder="99" min="18" max="99">
                 </div>
             </div>
-
+            <div class="filter-group">
+                <label>学历（多选）</label>
+                <div class="filter-options" data-field="学历" multiple>
+                    <span class="filter-chip" data-value="大专">大专</span>
+                    <span class="filter-chip" data-value="本科">本科</span>
+                    <span class="filter-chip" data-value="硕士">硕士</span>
+                    <span class="filter-chip" data-value="博士">博士</span>
+                </div>
+            </div>
+            <div class="filter-group">
+                <label>婚姻状态（多选）</label>
+                <div class="filter-options" data-field="婚姻状态" multiple>
+                    <span class="filter-chip" data-value="未婚">未婚</span>
+                    <span class="filter-chip" data-value="离异">离异</span>
+                    <span class="filter-chip" data-value="丧偶">丧偶</span>
+                </div>
+            </div>
         </div>
-
-        <div class="filter-modal-footer">
+        <div class="filter-footer">
             <button class="btn-reset" id="resetFilter">重置</button>
             <button class="btn-confirm" id="confirmFilter">确定</button>
         </div>
     </div>
 
-    <!-- 遮罩层 -->
-    <div class="mask" id="mask"></div>
+    <div class="toast" id="toast"></div>
 
-    <script src="js/config.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/app.js"></script>
+    <script>
+        // ---------- 全局变量 ----------
+        let allGuests = [];
+        let filteredGuests = [];
+        let currentFilters = {};
+
+        // ---------- DOM ----------
+        const cardsContainer = document.getElementById('cardsContainer');
+        const loadingState = document.getElementById('loadingState');
+        const emptyState = document.getElementById('emptyState');
+        const totalCount = document.getElementById('totalCount');
+        const filterModal = document.getElementById('filterModal');
+        const mask = document.getElementById('mask');
+        const toast = document.getElementById('toast');
+
+        // ---------- 工具函数 ----------
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 1800);
+        }
+
+        function showLoading(show) {
+            loadingState.style.display = show ? 'flex' : 'none';
+            cardsContainer.innerHTML = '';
+        }
+
+        // ---------- 渲染卡片 ----------
+        function renderCards(data) {
+            if (data.length === 0) {
+                cardsContainer.innerHTML = '';
+                emptyState.style.display = 'block';
+                totalCount.textContent = 0;
+                return;
+            }
+            emptyState.style.display = 'none';
+            totalCount.textContent = data.length;
+            cardsContainer.innerHTML = data.map((guest, i) => {
+                const f = guest.fields || {};
+                const name = f['昵称'] || '匿名';
+                const gender = f['性别'] || '';
+                const age = f['年龄'] || '';
+                const height = f['身高'] || '';
+                const education = f['学历'] || '';
+                const location = f['现居地'] || '';
+                const imgs = f['首图'] || [];
+                const avatarUrl = Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : '';
+                const detailParts = [age + '岁', height + 'cm'].filter(Boolean).join(' · ');
+
+                return `
+                    <div class="guest-card" style="animation-delay:${i*0.03}s">
+                        <div class="card-avatar">
+                            ${avatarUrl ? `<img src="${avatarUrl}" alt="${name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span style="display:none;font-size:40px;">${name[0]}</span>` : `<span style="font-size:40px;">${name[0]}</span>`}
+                        </div>
+                        <div class="card-info">
+                            <div class="card-name">${name}</div>
+                            <div class="card-detail">${detailParts}</div>
+                            <div class="card-tags">
+                                ${education ? `<span class="tag">${education}</span>` : ''}
+                                ${location ? `<span class="tag">${location}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ---------- 筛选逻辑 ----------
+        function applyFilters() {
+            let result = [...allGuests];
+            const gender = currentFilters['性别'];
+            if (gender) result = result.filter(g => g.fields['性别'] === gender);
+            const ageMin = parseInt(currentFilters['年龄']?.min) || 0;
+            const ageMax = parseInt(currentFilters['年龄']?.max) || 200;
+            result = result.filter(g => {
+                const a = parseInt(g.fields['年龄']);
+                return a >= ageMin && a <= ageMax;
+            });
+            ['学历', '婚姻状态'].forEach(field => {
+                const vals = currentFilters[field];
+                if (vals && vals.length > 0) {
+                    result = result.filter(g => vals.some(v => (g.fields[field] || '').includes(v)));
+                }
+            });
+            filteredGuests = result;
+            renderCards(filteredGuests);
+        }
+
+        // ---------- 筛选面板交互 ----------
+        document.getElementById('openFilter').addEventListener('click', () => {
+            filterModal.classList.add('show');
+            mask.classList.add('show');
+        });
+        document.getElementById('closeFilter').addEventListener('click', () => {
+            filterModal.classList.remove('show');
+            mask.classList.remove('show');
+        });
+        mask.addEventListener('click', () => {
+            filterModal.classList.remove('show');
+            mask.classList.remove('show');
+        });
+
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', function() {
+                const parent = this.parentElement;
+                if (parent.hasAttribute('multiple')) {
+                    this.classList.toggle('active');
+                } else {
+                    parent.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                }
+            });
+        });
+
+        document.getElementById('confirmFilter').addEventListener('click', () => {
+            currentFilters = {};
+            document.querySelectorAll('.filter-options').forEach(group => {
+                const field = group.dataset.field;
+                const activeChips = group.querySelectorAll('.filter-chip.active');
+                if (activeChips.length === 0) return;
+                if (group.hasAttribute('multiple')) {
+                    const vals = Array.from(activeChips).map(c => c.dataset.value).filter(Boolean);
+                    if (vals.length > 0) currentFilters[field] = vals;
+                } else {
+                    const val = activeChips[0].dataset.value;
+                    if (val) currentFilters[field] = val;
+                }
+            });
+            const ageMin = document.getElementById('ageMin').value;
+            const ageMax = document.getElementById('ageMax').value;
+            if (ageMin || ageMax) currentFilters['年龄'] = { min: ageMin || 18, max: ageMax || 99 };
+            applyFilters();
+            filterModal.classList.remove('show');
+            mask.classList.remove('show');
+            showToast('✅ 筛选已应用');
+        });
+
+        document.getElementById('resetFilter').addEventListener('click', () => {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            document.querySelector('[data-field="性别"] .filter-chip[data-value=""]').classList.add('active');
+            document.getElementById('ageMin').value = '';
+            document.getElementById('ageMax').value = '';
+            currentFilters = {};
+            applyFilters();
+            filterModal.classList.remove('show');
+            mask.classList.remove('show');
+        });
+
+        // ---------- 初始化：从 data.json 加载 ----------
+        async function init() {
+            showLoading(true);
+            try {
+                const resp = await fetch('data.json');
+                if (!resp.ok) throw new Error('数据加载失败');
+                allGuests = await resp.json();
+                console.log('✅ 加载 ' + allGuests.length + ' 条真实数据');
+                filteredGuests = [...allGuests];
+                renderCards(filteredGuests);
+            } catch (e) {
+                console.error(e);
+                renderCards([]);
+                showToast('❌ 数据加载失败');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        init();
+    </script>
 </body>
 </html>
